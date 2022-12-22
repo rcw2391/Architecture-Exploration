@@ -1,9 +1,6 @@
-﻿// See https://aka.ms/new-console-template for more information
-using DatabaseAccess;
+﻿using DatabaseAccess;
 using Models;
 using Repositories.Concrete;
-
-Console.WriteLine("Hello, World!");
 
 string connString = @"Server=(localdb)\MSSQLLocalDB;Database=Architecture-Testing;Integrated Security=true;";
 

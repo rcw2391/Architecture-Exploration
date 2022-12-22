@@ -1,0 +1,7 @@
+﻿CREATE OR ALTER PROCEDURE GetPersonByID (@ID int)
+
+AS
+    SELECT * FROM Person WHERE ID = @ID
+GO
+
+EXEC GetPersonByID @ID = 1

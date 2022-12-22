@@ -3,3 +3,16 @@
 ################################################################################
 
 /ORM-less/.vs/ORM-less/FileContentIndex
+/ORM-less/.vs/ORM-less/v17
+/ORM-less/ORM-less/obj
+/ORM-less/Models/obj
+/ORM-less/DatabaseAccess/obj
+/ORM-less/ModelFactory/obj
+/ORM-less/Repositories/obj
+/ORM-less/.vs
+/ORM-less/DatabaseAccess/bin/Debug/net6.0
+/ORM-less/ModelFactory/bin/Debug/net6.0
+/ORM-less/Models/bin/Debug/net6.0
+/ORM-less/ORM-less/bin/Debug/net6.0
+/ORM-less/Repositories/bin/Debug/net6.0
+/ORM-less/SQL/obj

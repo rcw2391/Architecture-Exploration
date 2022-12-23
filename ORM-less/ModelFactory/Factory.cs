@@ -9,6 +9,7 @@ namespace ModelFactory
         {
             List<T> results = new();
             var properites = typeof(T).GetProperties().Where(p => p.IsDefined(typeof(DbColumn), false));
+            var columnSchema = reader.GetColumnSchema();
 
             while (reader.Read())
             {
@@ -18,9 +19,9 @@ namespace ModelFactory
                     string? columnOverride = (property.GetCustomAttributes(false).ToList().First(attr => attr is DbColumn) as DbColumn)?.Name;
                     string columnName = columnOverride is null || columnOverride == string.Empty ? property.Name : columnOverride;
 
-                    property.SetValue(row, reader[columnName]);
-                    results.Add((T)row);
+                    if (columnSchema.Any(c => c.ColumnName == columnName)) property.SetValue(row, reader[columnName]);
                 }
+                results.Add((T)row);
             }
 
             return results;

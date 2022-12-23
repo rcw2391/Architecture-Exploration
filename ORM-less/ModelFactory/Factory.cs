@@ -1,7 +1,7 @@
 ﻿using Models;
 using System.Collections;
-using System.Collections.ObjectModel;
 using System.Data.SqlClient;
+using System.Net.Security;
 using System.Reflection;
 using DbColumn = Models.DbColumn;
 
@@ -22,7 +22,7 @@ namespace ModelFactory
             var primaryKey = typeof(T).GetProperties().First(p => p.IsDefined(typeof(DbPk), false));
             Dictionary<(string TableName, string ColumnName), int> ordinals = new();
 
-            foreach (var column in columnSchema.Where(c => c.ColumnOrdinal is not null))
+            foreach (var column in columnSchema.Where(c => c?.ColumnOrdinal is not null && c?.BaseColumnName is not null && c?.BaseTableName is not null))
             {
                 ordinals.Add((column.BaseTableName, column.ColumnName), column.ColumnOrdinal.Value);
             }

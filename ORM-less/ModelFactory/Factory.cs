@@ -11,6 +11,8 @@ namespace ModelFactory
     {
         // Needs to be refactored to be more readable and useable. However it works, it can pull a single object and it can pull a child
         // object. To be added in the future: recursively populate child objects if the data exists.
+        // Columns with the same name as other columns from different tables are currently not working properly.
+        // The solution is to implement a class that is able to store the ordinal for a column using both the column-property mapping and table name
         public static IEnumerable<T> ReadResults<T>(SqlDataReader reader) where T: DbObject
         {
             List<T> results = new();
@@ -18,7 +20,7 @@ namespace ModelFactory
             var columnSchema = reader.GetColumnSchema();
             var childProperties = typeof(T).GetProperties().Where(p => p.IsDefined(typeof(DbFk), false));
             Dictionary<PropertyInfo?, Type> childPropertiesToPopulate = new();
-            var primaryKey = typeof(T).GetProperties().Where(p => p.IsDefined(typeof(DbPk), false)).First();
+            var primaryKey = typeof(T).GetProperties().First(p => p.IsDefined(typeof(DbPk), false));
 
             foreach (var childProperty in childProperties)
             {
@@ -66,12 +68,13 @@ namespace ModelFactory
 
         private static void SetValues(IEnumerable<PropertyInfo?> properties, object o, SqlDataReader reader, ReadOnlyCollection<System.Data.Common.DbColumn> columnSchema)
         {
+            string? tableName = (o.GetType().GetCustomAttribute(typeof(DbTable)) as DbTable).TableName;
             foreach (var property in properties)
             {
                 string? columnOverride = (property.GetCustomAttributes(false).ToList().FirstOrDefault(attr => attr is DbColumn) as DbColumn)?.Name;
                 string columnName = columnOverride is null || columnOverride == string.Empty ? property.Name : columnOverride;
 
-                if (columnSchema.Any(c => c.ColumnName == columnName)) property.SetValue(o, reader[columnName]);
+                if (tableName is not null && columnSchema.Any(c => c.ColumnName == columnName && c.BaseTableName == tableName)) property.SetValue(o, reader[columnName]);
             }
         }
     }

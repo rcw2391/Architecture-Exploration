@@ -11,8 +11,7 @@ namespace ModelFactory
     {
         // Needs to be refactored to be more readable and useable. However it works, it can pull a single object and it can pull a child
         // object. To be added in the future: recursively populate child objects if the data exists.
-        // Columns with the same name as other columns from different tables are currently not working properly.
-        // The solution is to implement a class that is able to store the ordinal for a column using both the column-property mapping and table name
+        // Refactor ideas: Implement classes to handle work so this is easier to follow, manage, and write tests for.
         public static IEnumerable<T> ReadResults<T>(SqlDataReader reader) where T: DbObject
         {
             List<T> results = new();
@@ -21,6 +20,12 @@ namespace ModelFactory
             var childProperties = typeof(T).GetProperties().Where(p => p.IsDefined(typeof(DbFk), false));
             Dictionary<PropertyInfo?, Type> childPropertiesToPopulate = new();
             var primaryKey = typeof(T).GetProperties().First(p => p.IsDefined(typeof(DbPk), false));
+            Dictionary<(string TableName, string ColumnName), int> ordinals = new();
+
+            foreach (var column in columnSchema.Where(c => c.ColumnOrdinal is not null))
+            {
+                ordinals.Add((column.BaseTableName, column.ColumnName), column.ColumnOrdinal.Value);
+            }
 
             foreach (var childProperty in childProperties)
             {
@@ -39,14 +44,14 @@ namespace ModelFactory
                var existingObject = results.FirstOrDefault(r => typeof(T).GetProperty(primaryKey.Name).GetValue(r).Equals(reader[primaryKey.Name]));
                 bool existingObjectIsNull = existingObject is null;
                 T row = existingObjectIsNull ? (T)Activator.CreateInstance(typeof(T)) : existingObject;
-                SetValues(properites, row, reader, columnSchema);
+                SetValues(properites, row, reader, ordinals);
                 
 
                 foreach (var childProperty in childPropertiesToPopulate.Keys)
                 {
                     Type childType = childPropertiesToPopulate[childProperty];
                     IDbObject child = (IDbObject)Activator.CreateInstance(childPropertiesToPopulate[childProperty]);
-                    SetValues(childType.GetProperties(), child, reader, columnSchema);
+                    SetValues(childType.GetProperties(), child, reader, ordinals);
 
                     var type = childProperty.GetValue(row).GetType();
 
@@ -66,7 +71,7 @@ namespace ModelFactory
             return results;
         }
 
-        private static void SetValues(IEnumerable<PropertyInfo?> properties, object o, SqlDataReader reader, ReadOnlyCollection<System.Data.Common.DbColumn> columnSchema)
+        private static void SetValues(IEnumerable<PropertyInfo?> properties, object o, SqlDataReader reader, Dictionary<(string TableName, string ColumnName), int> ordinals)
         {
             string? tableName = (o.GetType().GetCustomAttribute(typeof(DbTable)) as DbTable).TableName;
             foreach (var property in properties)
@@ -74,7 +79,7 @@ namespace ModelFactory
                 string? columnOverride = (property.GetCustomAttributes(false).ToList().FirstOrDefault(attr => attr is DbColumn) as DbColumn)?.Name;
                 string columnName = columnOverride is null || columnOverride == string.Empty ? property.Name : columnOverride;
 
-                if (tableName is not null && columnSchema.Any(c => c.ColumnName == columnName && c.BaseTableName == tableName)) property.SetValue(o, reader[columnName]);
+                if (ordinals.ContainsKey((tableName, columnName))) property.SetValue(o, reader.GetValue(ordinals[(tableName, columnName)]));
             }
         }
     }

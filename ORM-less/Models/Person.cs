@@ -12,5 +12,7 @@
         public DateTime Created { get; set; }
         [DbColumn]
         public int CreatedByID { get; set; }
+
+        List<Transaction> Transactions { get; set; } = new();
     }
 }

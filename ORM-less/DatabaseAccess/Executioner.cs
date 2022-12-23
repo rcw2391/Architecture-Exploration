@@ -1,5 +1,6 @@
 ﻿using ModelFactory;
 using Models;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace DatabaseAccess
@@ -18,8 +19,8 @@ namespace DatabaseAccess
         {
             SqlConnection connection = await _connectionManager.GetConnectionAsync();
             SqlCommand command = new(queryString, connection);
-            command.Parameters.AddRange(parameters);
-            SqlDataReader reader = await command.ExecuteReaderAsync();
+            if (parameters is not null) command.Parameters.AddRange(parameters);
+            SqlDataReader reader = await command.ExecuteReaderAsync(CommandBehavior.KeyInfo);
             return Factory.ReadResults<T>(reader);
         }
     }

@@ -21,5 +21,11 @@ namespace Repositories.Concrete
 
             return (await _executioner.ExecuteFetchAsync<Person>(queryString, parameters)).First();
         }
+
+        public async Task<IEnumerable<Person>> GetAllWithChildren()
+        {
+            string queryString = @"SELECT * FROM Person p INNER JOIN Transactions t ON p.ID = t.PersonID";
+            return await _executioner.ExecuteFetchAsync<Person>(queryString, null);
+        }
     }
 }

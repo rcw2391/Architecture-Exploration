@@ -1,8 +1,10 @@
 ﻿namespace Models
 {
+    [DbTable("Person")] 
     public class Person : DbObject
     {
         [DbColumn]
+        [DbPk]
         public int ID { get; set; }
         [DbColumn]
         public string FirstName { get; set; } = string.Empty;
@@ -13,6 +15,7 @@
         [DbColumn]
         public int CreatedByID { get; set; }
 
-        List<Transaction> Transactions { get; set; } = new();
+        [DbFk("PersonID", typeof(Transaction))]
+        public List<Transaction> Transactions { get; set; } = new();
     }
 }
